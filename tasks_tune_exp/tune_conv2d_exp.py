@@ -16,6 +16,7 @@ from tune_func import tune_tasks
 target = tvm.target.cuda(model="T4")
 tvm.autotvm.measure.measure_methods.set_cuda_target_arch("sm_75")
 log_file = "conv2d_0_99.log"
+os.environ['CUDA_VISIBLE_DEVICES'] = "0,1,2,3,4,5,6,7"
 
 ctx = tvm.context(str(target), 0)
 tuning_option = {
@@ -46,17 +47,14 @@ logging.getLogger("autotvm").addHandler(logging.StreamHandler(sys.stdout))
 
 
 
-batches = [1, 2, 4, 8]
+batches = [2, 4, 8]
 in_channels = [32, 64, 128]
 in_heights = [64, 128, 256]
 filter_size_list = [3, 5]
 
 num_filer_map = {}
 for in_channel in in_channels:
-    if in_channel!=1:
-        num_filer_map[in_channel] = [in_channel*2, in_channel//2]
-    else:
-        num_filer_map[in_channel] = [in_channel*2]
+    num_filer_map[in_channel] = [in_channel*2]
 
 
 candidates = []
@@ -93,7 +91,8 @@ print("OMG!!! we have so many tasks to tune: " + str(len(tasks)))
 
 # tasks = tasks[0:100]
 
-# tune_tasks(tasks, **tuning_option)
+tune_tasks(tasks, **tuning_option)
+
 
 
 
