@@ -13,7 +13,8 @@ from tune_func import tune_tasks
 
 
 
-target = tvm.target.cuda()
+target = tvm.target.cuda(model="T4")
+tvm.autotvm.measure.measure_methods.set_cuda_target_arch("sm_75")
 log_file = "conv2d_0_99.log"
 
 ctx = tvm.context(str(target), 0)
