@@ -13,10 +13,11 @@ from tune_func import tune_tasks
 
 
 
-target = tvm.target.cuda(model="T4")
+#target = tvm.target.cuda(model="T4")
+target = "cuda -libs=cudnn"
 tvm.autotvm.measure.measure_methods.set_cuda_target_arch("sm_75")
-log_file = "conv2d_0_99.log"
-os.environ['CUDA_VISIBLE_DEVICES'] = "0,1,2,3,4,5,6,7"
+log_file = "conv2d_0_99_cuda_cudnn.log"
+os.environ['CUDA_VISIBLE_DEVICES'] = "4,5,6,7"
 
 ctx = tvm.context(str(target), 0)
 tuning_option = {
@@ -45,10 +46,8 @@ logging.getLogger("autotvm").addHandler(logging.StreamHandler(sys.stdout))
 
 
 
-
-
 batches = [2, 4, 8]
-in_channels = [32, 64, 128]
+in_channels = [32, 64]
 in_heights = [64, 128, 256]
 filter_size_list = [3, 5]
 
