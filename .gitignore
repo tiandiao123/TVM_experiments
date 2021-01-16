@@ -23,7 +23,7 @@ tmp
 *.onnx
 *.checkpoint
 saved_tvm_model
-
+test_topi_transform.py
 *.tgz
 *.zip
 *upload_dir
