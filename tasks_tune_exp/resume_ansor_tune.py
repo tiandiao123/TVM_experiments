@@ -16,8 +16,8 @@ from multiprocessing import Pool
 
 target = tvm.target.cuda(model="T4")
 tvm.autotvm.measure.measure_methods.set_cuda_target_arch("sm_75")
-log_file = "ansor_conv2d_0_99.json"
-os.environ['CUDA_VISIBLE_DEVICES'] = "4,5,6,7"
+log_file = "ansor_conv2d_new.json"
+os.environ['CUDA_VISIBLE_DEVICES'] = "3,4,5,6,7"
 ctx = tvm.context(str(target), 0)
 
 
@@ -25,10 +25,8 @@ ctx = tvm.context(str(target), 0)
 def conv2d_layer(N, H, W, CO, CI, KH, KW, stride, padding):
     data = te.placeholder((N, CI, H, W), name="data")
     kernel = te.placeholder((CO, CI, KH, KW), name="kernel")
-    bias = te.placeholder((1, CO, 1, 1), name="bias")
     conv = topi.nn.conv2d_nchw(data, kernel, stride, padding, dilation=1, out_dtype="float32")
-    out = topi.nn.relu(conv + bias)
-    return [data, kernel, bias, out]
+    return [data, kernel, conv]
 
 
 def resume_search(task, log_file):
@@ -40,7 +38,7 @@ def resume_search(task, log_file):
     )
     measure_ctx = auto_scheduler.LocalRPCMeasureContext(min_repeat_ms=300)
     tune_option = auto_scheduler.TuningOptions(
-        num_measure_trials=100,
+        num_measure_trials=1000,
         runner=measure_ctx.runner,
         measure_callbacks=[auto_scheduler.RecordToFile(log_file)],
     )
@@ -88,7 +86,7 @@ for task in create_tasks:
 
 print("we have {} tasks to tune".format(str(len(create_tasks))))
 index = 1
-for task in create_tasks[:5]:
+for task in create_tasks[5:]:
     index += 1
     print("current tuning task {} .................".format(index))
     resume_search(task, log_file)

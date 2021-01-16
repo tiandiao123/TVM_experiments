@@ -51,6 +51,33 @@ def resume_search(task, log_file):
 
 
 
+def evaluate_func(sch, args, N, H, W, CO, CI, KH, KW):
+    func = tvm.build(sch, args, target)
+
+    # Check correctness
+    data_np = np.random.uniform(size=(N, CI, H, W)).astype(np.float32)
+    weight_np = np.random.uniform(size=(CO, CI, KH, KW)).astype(np.float32)
+    conv_np = conv2d_nchw_python(data_np, weight_np, strides, padding)
+    out_np = conv_np
+
+    ctx = tvm.gpu()
+    data_tvm = tvm.nd.array(data_np, ctx=ctx)
+    weight_tvm = tvm.nd.array(weight_np, ctx=ctx)
+    out_tvm = tvm.nd.empty(out_np.shape, ctx=ctx)
+    func(data_tvm, weight_tvm, out_tvm)
+
+    # Check results
+    np.testing.assert_allclose(out_np, out_tvm.asnumpy(), rtol=1e-3)
+
+    # Evaluate execution time
+    evaluator = func.time_evaluator(func.entry_name, ctx, min_repeat_ms=500)
+    print(
+        "Execution time of this operator: %.3f ms"
+        % (np.median(evaluator(data_tvm, weight_tvm, out_tvm).results) * 1000)
+    )
+
+
+
 
 batches = [2, 4, 8]
 in_channels = [32, 64]
@@ -73,7 +100,7 @@ for batch_size in batches:
             out_channel = 2 * in_channel
             for filter_size in filter_size_list:
                 kernel_shape = (out_channel, in_channel, filter_size, filter_size)
-                input_info_list.append((data_shape, input_info_list))
+                input_info_list.append((data_shape, kernel_shape))
                 N, H, W, CO, CI, KH, KW, strides, padding = batch_size, in_height, in_width, out_channel, in_channel, filter_size, filter_size, (1, 1), (1, 1)
                 task = auto_scheduler.SearchTask(
                     func=conv2d_layer, args=(N, H, W, CO, CI, KH, KW, strides, padding), target=target
@@ -87,8 +114,14 @@ for task in create_tasks:
 
 
 print("we have {} tasks to tune".format(str(len(create_tasks))))
-index = 1
+index = 0
 for task in create_tasks[:5]:
+    sch, args = task.apply_best(log_file)
+    print("Lowered TIR:")
+    print(tvm.lower(sch, args, simple_mode=True))
+    data_shape, kernel_shape = input_info_list[index][0], input_info_list[index][1]
+    batch_size, in_channel, in_height, in_width = data_shape
+    out_channel, in_channel, filter_size, filter_size = kernel_shape
+    N, H, W, CO, CI, KH, KW, strides, padding = batch_size, in_height, in_width, out_channel, in_channel, filter_size, filter_size, (1, 1), (1, 1)
+    evaluate_func(sch, args, N, H, W, CO, CI, KH, KW)
     index += 1
-    print("current tuning task {} .................".format(index))
-    resume_search(task, log_file)
