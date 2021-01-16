@@ -17,7 +17,6 @@ __pycache__/
 *.so
 *.pyx
 *.c
-*log*
 exps
 *__pycache__/
 tmp
