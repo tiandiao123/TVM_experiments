@@ -12,6 +12,8 @@ import numpy as np
 import tvm
 from tvm import te, auto_scheduler, topi
 from tvm.topi.testing import conv2d_nchw_python
+from multiprocessing import Pool
+
 
 
 
@@ -43,6 +45,7 @@ for in_channel in in_channels:
 
 
 create_tasks = []
+input_info_list = []
 for batch_size in batches:
     for in_channel in in_channels:
         for in_height in in_heights:
@@ -51,21 +54,20 @@ for batch_size in batches:
             data = te.placeholder(data_shape, name = "data")
             out_channel = 2 * in_channel
             for filter_size in filter_size_list:
+                kernel_shape = (out_channel, in_channel, filter_size, filter_size)
+                input_info_list.append((data_shape, input_info_list))
                 N, H, W, CO, CI, KH, KW, strides, padding = batch_size, in_height, in_width, out_channel, in_channel, filter_size, filter_size, (1, 1), (1, 1)
                 task = auto_scheduler.SearchTask(
                     func=conv2d_layer, args=(N, H, W, CO, CI, KH, KW, strides, padding), target=target
                 )
                 create_tasks.append(task)
-                # kernel_shape = (num_filter, in_channel, filter_size, filter_size)
-                # kernel = te.placeholder(kernel_shape, name="kernel")
-                # candidates.append((data, kernel))
+
             
 for task in create_tasks:
     print("---------------")
     print(task.compute_dag)
 
-
-measure_ctx = auto_scheduler.LocalRPCMeasureContext(min_repeat_ms=300)
+measure_ctx = auto_scheduler.LocalRPCMeasureContext(repeat=1, min_repeat_ms=300, timeout=10)
 tune_option = auto_scheduler.TuningOptions(
     num_measure_trials=1000,  # change this to 1000 to achieve the best performance
     runner=measure_ctx.runner,
@@ -75,7 +77,7 @@ tune_option = auto_scheduler.TuningOptions(
 
 print("we have {} tasks to tune".format(str(len(create_tasks))))
 index = 1
-for task in create_tasks:
+for task in create_tasks[:5]:
     index += 1
     print("current tuning task {} .................".format(index))
     task.tune(tune_option)
