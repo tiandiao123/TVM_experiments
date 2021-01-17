@@ -3,6 +3,19 @@ import pickle
 import json
 import logging
 import csv
+import logging
+import sys
+import tvm
+from tvm import te
+from tvm import topi
+from tvm.topi.testing import conv2d_nchw_python
+from tvm import autotvm
+import numpy as np
+import tvm
+from tvm import te, auto_scheduler, topi
+from tvm.topi.testing import conv2d_nchw_python
+from multiprocessing import Pool
+
 
 
 log_file = "./log_dir/conv2d_0_99_cuda_cudnn.log"
@@ -63,13 +76,14 @@ print("final_info_list length is : " + str(len(final_info_list)))
 
 
 
-
 with open('stats.csv', mode='w') as w_file:
     w_writer = csv.writer(w_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
     w_writer.writerow(['input_info', 'cuda T4', 'cuda T4 --libs==cudnn'])
     for line in final_info_list:
         w_writer.writerow(line)
+
+
 
 
 
