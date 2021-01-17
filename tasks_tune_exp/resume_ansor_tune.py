@@ -85,8 +85,9 @@ for task in create_tasks:
 
 
 print("we have {} tasks to tune".format(str(len(create_tasks))))
-index = 1
-for task in create_tasks[5:]:
-    index += 1
+index = 0
+for task in create_tasks[:5]:
+    #index += 1
     print("current tuning task {} .................".format(index))
     resume_search(task, log_file)
+    index += 1

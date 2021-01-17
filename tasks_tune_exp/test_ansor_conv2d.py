@@ -16,7 +16,7 @@ from multiprocessing import Pool
 
 target = tvm.target.cuda(model="T4")
 tvm.autotvm.measure.measure_methods.set_cuda_target_arch("sm_75")
-log_file = "ansor_conv2d_0_99.json"
+log_file = "ansor_conv2d_new.json"
 os.environ['CUDA_VISIBLE_DEVICES'] = "4,5,6,7"
 ctx = tvm.context(str(target), 0)
 
@@ -25,10 +25,8 @@ ctx = tvm.context(str(target), 0)
 def conv2d_layer(N, H, W, CO, CI, KH, KW, stride, padding):
     data = te.placeholder((N, CI, H, W), name="data")
     kernel = te.placeholder((CO, CI, KH, KW), name="kernel")
-    bias = te.placeholder((1, CO, 1, 1), name="bias")
     conv = topi.nn.conv2d_nchw(data, kernel, stride, padding, dilation=1, out_dtype="float32")
-    out = topi.nn.relu(conv + bias)
-    return [data, kernel, bias, out]
+    return [data, kernel, conv]
 
 
 def resume_search(task, log_file):
@@ -76,6 +74,8 @@ def evaluate_func(sch, args, N, H, W, CO, CI, KH, KW):
         % (np.median(evaluator(data_tvm, weight_tvm, out_tvm).results) * 1000)
     )
 
+    return np.median(evaluator(data_tvm, weight_tvm, out_tvm).results)
+
 
 
 
@@ -115,13 +115,20 @@ for task in create_tasks:
 
 print("we have {} tasks to tune".format(str(len(create_tasks))))
 index = 0
-for task in create_tasks[:5]:
+ans_res_list = []
+for task in create_tasks:
     sch, args = task.apply_best(log_file)
-    print("Lowered TIR:")
-    print(tvm.lower(sch, args, simple_mode=True))
+    # print("Lowered TIR:")
+    # print(tvm.lower(sch, args, simple_mode=True))
     data_shape, kernel_shape = input_info_list[index][0], input_info_list[index][1]
     batch_size, in_channel, in_height, in_width = data_shape
     out_channel, in_channel, filter_size, filter_size = kernel_shape
     N, H, W, CO, CI, KH, KW, strides, padding = batch_size, in_height, in_width, out_channel, in_channel, filter_size, filter_size, (1, 1), (1, 1)
-    evaluate_func(sch, args, N, H, W, CO, CI, KH, KW)
+    ans_res = evaluate_func(sch, args, N, H, W, CO, CI, KH, KW)
+    ans_res_list.append((data_shape, kernel_shape, ans_res))
     index += 1
+
+
+
+for ele in ans_res_list:
+    print(ele)
