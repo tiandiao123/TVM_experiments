@@ -68,7 +68,7 @@ def evaluate_func(sch, args, N, H, W, CO, CI, KH, KW):
     np.testing.assert_allclose(out_np, out_tvm.asnumpy(), rtol=1e-3)
 
     # Evaluate execution time
-    evaluator = func.time_evaluator(func.entry_name, ctx, min_repeat_ms=500)
+    evaluator = func.time_evaluator(func.entry_name, ctx, min_repeat_ms=50)
     print(
         "Execution time of this operator: %.3f ms"
         % (np.median(evaluator(data_tvm, weight_tvm, out_tvm).results) * 1000)
@@ -132,3 +132,6 @@ for task in create_tasks:
 
 for ele in ans_res_list:
     print(ele)
+pritn("-----------------------")
+for ele in ans_res_list:
+    print(ele[2])

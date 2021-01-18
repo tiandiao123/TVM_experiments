@@ -38,7 +38,7 @@ def resume_search(task, log_file):
     )
     measure_ctx = auto_scheduler.LocalRPCMeasureContext(min_repeat_ms=300)
     tune_option = auto_scheduler.TuningOptions(
-        num_measure_trials=1000,
+        num_measure_trials=500,
         runner=measure_ctx.runner,
         measure_callbacks=[auto_scheduler.RecordToFile(log_file)],
     )
@@ -86,7 +86,7 @@ for task in create_tasks:
 
 print("we have {} tasks to tune".format(str(len(create_tasks))))
 index = 0
-for task in create_tasks[:5]:
+for task in create_tasks:
     #index += 1
     print("current tuning task {} .................".format(index))
     resume_search(task, log_file)
