@@ -26,4 +26,4 @@ test_topi_transform.py
 *.tgz
 *.zip
 *upload_dir
-
+*build
