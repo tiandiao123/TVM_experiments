@@ -11,7 +11,6 @@ __pycache__/
 *deploy_graph.json
 *deploy_lib.tar
 *.so
-*.txt
 *.data
 *.so
 *.pyx
