@@ -74,6 +74,7 @@ TVM_REGISTER_GLOBAL("relay.backend.lower_call")
     });
 
 TEST(Relay, BuildModule) {
+  std::cout << "I am testing my build model" << std::endl;
   auto tensor_type = relay::TensorType({2, 3}, DataType::Float(32));
   auto a = relay::Var("a", tensor_type);
   auto b = relay::Var("b", tensor_type);
