@@ -13,7 +13,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 
 # main code
-add_executable(relay_build_module_test relay_build_module_test.cc)
+add_executable(leyuan_relay_build_copy leyuan_relay_build_copy.cc)
 
 # example library
 include_directories(SYSTEM /root/std_tvm/3rdparty/dlpack/include/)
@@ -63,10 +63,11 @@ if(ENABLE_UNIT_TESTS)
 
 
 
-  target_link_libraries(relay_build_module_test
+  target_link_libraries(leyuan_relay_build_copy
     PRIVATE
       gtest_main
       "/root/std_tvm/build/libtvm.so"
+      # "/root/std_tvm/build/libtvm_runtime.so"
     )
   
 
@@ -74,6 +75,6 @@ if(ENABLE_UNIT_TESTS)
 
   add_test(
     NAME google_test
-    COMMAND $<TARGET_FILE:relay_build_module_test>
+    COMMAND $<TARGET_FILE:leyuan_relay_build_copy>
     )
 endif()
